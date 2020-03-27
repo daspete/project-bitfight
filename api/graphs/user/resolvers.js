@@ -1,15 +1,21 @@
 export default {
     Query: {
-        async Users(root, args, context, info){
-            return [{
-                _id: '875894375dfljksgsd',
-                username: 'testuser',
-                personal: {
-                    firstname: 'test',
-                    lastname: 'user'
-                },
-                email: 'daspetemail@gmail.com'
-            }]
+        Users(root, args, { UserProvider }){
+            return UserProvider.GetUsers()
+        }
+    },
+
+    Mutation: {
+        async RegisterUser(root, { data }, { pubSub, UserProvider, AuthProvider }){
+            return await UserProvider.RegisterUser(data)
+        }
+    },
+
+    Subscription: {
+        UserRegistered: {
+            subscribe(root, args, { pubSub }, info){
+                return pubSub.asyncIterator(['USER_REGISTERED'])
+            }
         }
     },
 

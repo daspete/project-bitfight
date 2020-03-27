@@ -2,7 +2,20 @@ type Query {
     Users: [User]
 }
 
+type Mutation {
+    RegisterUser(data: UserInput): User
+}
+
+type Subscription {
+    UserRegistered: User
+}
+
 type UserPersonalData {
+    firstname: String
+    lastname: String
+}
+
+input UserPersonalDataInput {
     firstname: String
     lastname: String
 }
@@ -12,4 +25,11 @@ type User {
     personal: UserPersonalData
     email: String
     username: String
+}
+
+input UserInput {
+    personal: UserPersonalDataInput
+    email: String
+    username: String
+    password: String
 }

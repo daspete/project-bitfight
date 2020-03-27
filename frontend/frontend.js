@@ -4,12 +4,11 @@ import ExpressService from '~~/services/express'
 import ExpressRouter from '~~/services/express/router'
 
 import expressConfig from './config/express'
-import frontendConfig from './config/frontend'
+import FrontendConfig from './config/frontend'
 
 
 
 const isDevMode = !(process.env.NODE_ENV == 'production')
-frontendConfig.dev = isDevMode
 
 const server = new ExpressService(expressConfig)
 
@@ -22,6 +21,9 @@ router.AddRoutes(routes)
 
 // Start process
 const StartServer = async () => {
+    const frontendConfig = await FrontendConfig()
+    frontendConfig.dev = isDevMode
+    
     const nuxt = new Nuxt(frontendConfig)
 
     const builder = new Builder(nuxt)

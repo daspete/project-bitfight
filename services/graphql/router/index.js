@@ -13,6 +13,12 @@ export default class Router {
             return graph
         })
     }
+    
+    get ModuleProviders(){
+        return this.graphs.map((graph) => {
+            return graph
+        })
+    }
 
     AddGraphModules(graphs){
         let modules = []
@@ -25,7 +31,8 @@ export default class Router {
     }
 
     AddGraphModule(graph){
-        return CreateGraphModule(graph)
+        // console.log(graph)
+        return CreateGraphModule(graph, this)
     }
 
 }

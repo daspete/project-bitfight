@@ -2,7 +2,7 @@ import 'dotenv/config'
 
 export default {
     // server ip and port
-    ip: process.env.API_IP || '127.0.0.1',
+    ip: process.env.API_HOST || '127.0.0.1',
     port: process.env.API_PORT || 3000,
 
 

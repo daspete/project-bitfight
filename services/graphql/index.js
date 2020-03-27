@@ -1,6 +1,9 @@
 import { ApolloServer } from 'apollo-server-express'
 import { GraphQLModule } from '@graphql-modules/core'
 import Router from './router'
+import { execute, subscribe } from 'graphql'
+import { PubSub } from 'graphql-subscriptions'
+import { SubscriptionServer } from 'subscriptions-transport-ws'
 
 class GraphQLService {
     constructor(config){
@@ -15,6 +18,9 @@ class GraphQLService {
         this.runtimeModules = []
 
         this.contextData = {}
+        this.providers = {}
+
+        this.pubSub = new PubSub()
 
         this.graphRouter = new Router(this, config.graphs)
     }
@@ -29,12 +35,36 @@ class GraphQLService {
 
         this.apollo = undefined
 
+        for(let i = 0; i < this.graphRouter.ModuleProviders.length; i++){
+            const module = this.graphRouter.ModuleProviders[i].module
+            if(module.provider){
+                this.providers[module.provider.name] = new module.provider()
+            }
+            
+        }
+
         this.apollo = new ApolloServer({
             introspection: true,
             schema: mainModule.schema,
             debug: process.env.NODE_ENV !== 'production',
             context: ({ req }) => {
-                return { req, ...this.contextData, ...mainModule.context }
+                let context = { 
+                    req, 
+                    pubSub: this.pubSub,
+                    ...this.contextData, 
+                    ...mainModule.context,
+                }
+
+                Object.keys(this.providers).map((providerName) => {
+                    this.providers[providerName].SetContext(context)
+                })
+
+                context = {
+                    ...context,
+                    ...this.providers
+                }
+
+                return context
             }
         })
 
@@ -45,6 +75,16 @@ class GraphQLService {
 
         this.server.app.use((req, res, next) => {
             return this.middleware(req, res, next)
+        })
+
+        new SubscriptionServer({
+            execute,
+            subscribe,
+            schema: mainModule.schema,
+            ...mainModule.subscriptions
+        }, {
+            server: this.server.server,
+            path: this.config.subscriptionPrefix
         })
     }
 

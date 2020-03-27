@@ -35,8 +35,9 @@ const StartServer = async () => {
 
     server.Use('/healthcheck', (req, res, next) => { res.json(`api up`) })
 
-    graphql.Start()
     server.Start()
+    graphql.Start()
+    
 }
 
 StartServer()
