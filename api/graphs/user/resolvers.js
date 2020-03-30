@@ -1,7 +1,7 @@
 export default {
     Query: {
-        Users(root, args, { UserProvider }){
-            return UserProvider.GetUsers()
+        async Users(root, args, { UserProvider }){
+            return await UserProvider.GetUsers()
         }
     },
 
@@ -13,8 +13,8 @@ export default {
 
     Subscription: {
         UserRegistered: {
-            subscribe(root, args, { pubSub }, info){
-                return pubSub.asyncIterator(['USER_REGISTERED'])
+            subscribe(root, args, context, info){
+                return context.pubSub.asyncIterator(['USER_REGISTERED'])
             }
         }
     },

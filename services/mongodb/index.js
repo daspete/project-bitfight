@@ -21,7 +21,7 @@ class MongodbService {
     }
 
     Initialize(){
-        console.log('initialize db connection', this.config)
+        // console.log('initialize db connection', this.config)
         this.client = new MongoClient(`mongodb://${ this.config.host }:${ this.config.port }`, this.config.settings)
     }
 

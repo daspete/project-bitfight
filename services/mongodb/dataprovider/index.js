@@ -4,6 +4,7 @@ import databaseConfig from '~~/api/config/database'
 export default class DataProvider {
     constructor(config){
         this.config = config
+        console.log('Init dataprovider for collection ', this.config.collection)
 
         this.database = new MongoDBService(databaseConfig)
         this.database.Connect()

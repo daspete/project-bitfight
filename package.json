@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "little hero defense game",
     "main": "index.js",
-    "repository": "https://github.com/manablox/project-bitfight.git",
+    "repository": "https://github.com/daspete/project-bitfight.git",
     "author": "daspete <daspetemail@gmail.com>",
     "license": "MIT",
     "scripts": {

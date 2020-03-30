@@ -1,70 +1,66 @@
 import { ApolloServer } from 'apollo-server-express'
 import { GraphQLModule } from '@graphql-modules/core'
-import Router from './router'
+// import Router from './router'
 import { execute, subscribe } from 'graphql'
 import { PubSub } from 'graphql-subscriptions'
 import { SubscriptionServer } from 'subscriptions-transport-ws'
 
+let providers = []
+const providerFiles = require.context('../../api/graphs', true, /provider\.js$/)
+providerFiles.keys().map((key) => { providers.push(providerFiles(key).default) })
+
 class GraphQLService {
-    constructor(config){
-        this.config = config
-        this.server = this.config.server
+    constructor(params){
+        this.config = params.config
+        this.modules = params.modules
+        this.server = params.server
+        this.providers = providers
         
-        this.apollo = null
-        this.graphRouter = null
-
-        this.middleware = null
-
-        this.runtimeModules = []
-
-        this.contextData = {}
-        this.providers = {}
 
         this.pubSub = new PubSub()
 
-        this.graphRouter = new Router(this, config.graphs)
+        this.mainModule = null
+        this.apollo = null
+        this.middleware = null
+
+        this.context = {
+            pubSub: this.pubSub   
+        }
+
+        this.providers = this.providers.map((provider) => {
+            return new provider()
+        })
     }
 
     async Start(){
-        let mainModule = new GraphQLModule({
+        this.providers.map((provider) => {
+            this.context[provider.constructor.name] = provider
+        })
+
+        this.mainModule = new GraphQLModule({
+            context: (ctx) => {
+                const contextData = { ...ctx, ...this.context }
+                this.providers.map((provider) => { provider.SetContext(contextData) })
+
+                return contextData
+            },
             imports: [
-                ...this.graphRouter.Modules,
-                ...this.runtimeModules
+                ...this.modules
             ]
         })
 
-        this.apollo = undefined
-
-        for(let i = 0; i < this.graphRouter.ModuleProviders.length; i++){
-            const module = this.graphRouter.ModuleProviders[i].module
-            if(module.provider){
-                this.providers[module.provider.name] = new module.provider()
-            }
-            
-        }
-
         this.apollo = new ApolloServer({
             introspection: true,
-            schema: mainModule.schema,
+            schema: this.mainModule.schema,
             debug: process.env.NODE_ENV !== 'production',
-            context: ({ req }) => {
-                let context = { 
-                    req, 
-                    pubSub: this.pubSub,
-                    ...this.contextData, 
-                    ...mainModule.context,
-                }
+            context: (context) => {
 
-                Object.keys(this.providers).map((providerName) => {
-                    this.providers[providerName].SetContext(context)
-                })
-
-                context = {
+                let contextData = {
                     ...context,
-                    ...this.providers
+                    ...this.context
                 }
 
-                return context
+                return contextData
             }
         })
 
@@ -80,12 +76,18 @@ class GraphQLService {
         new SubscriptionServer({
             execute,
             subscribe,
-            schema: mainModule.schema,
-            ...mainModule.subscriptions
+            schema: this.mainModule.schema,
+            ...this.mainModule.subscriptions,
+            onConnect: (connectionParams, webSocket, context) => {
+                context = { ...context, ...this.context }
+                return context
+            },
+            onDisconnect: (webSocket, context) => {}
         }, {
             server: this.server.server,
             path: this.config.subscriptionPrefix
         })
+
     }
 
     SetContextData(data){

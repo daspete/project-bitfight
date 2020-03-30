@@ -18,18 +18,29 @@ routeFiles.keys().map((key) => { routes.push({ name: key, route: routeFiles(key)
 const router = new ExpressRouter(server)
 router.AddRoutes(routes)
 
-// create graph routes
-let graphs = []
-const graphFiles = require.context('./graphs', true, /index\.js$/)
-graphFiles.keys().map((key) => { graphs.push({ name: key.split('/').reverse()[1], module: graphFiles(key).default }) })
-graphs = graphs.filter((graph) => { return graph.module.autoload == true })
+import UserGraph from '~~/api/graphs/user'
+import RoomGraph from '~~/api/graphs/room'
+
+// // create graph routes
+// let graphs = []
+// const graphFiles = require.context('./graphs', true, /index\.js$/)
+// graphFiles.keys().map((key) => { graphs.push({ name: key.split('/').reverse()[1], module: graphFiles(key).default }) })
+// graphs = graphs.filter((graph) => { return graph.module.autoload == true })
 
 
 
 // Start process
 const StartServer = async () => {
     new AuthService(authConfig)
-    const graphql = new GraphQLService({ ...graphqlConfig, server, graphs })
+
+    const graphql = new GraphQLService({ 
+        config: graphqlConfig,
+        server: server,
+        modules: [
+            UserGraph,
+            RoomGraph
+        ]
+    })
 
     server.Use(passport.initialize())
 

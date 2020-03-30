@@ -1,9 +1,15 @@
+import DataProvider from '~~/services/mongodb/dataprovider'
+
 export default class UserProvider {
     users = []
 
     constructor(){
         this.context = null
         this.pubSub = null
+
+        this.dataprovider = new DataProvider({
+            collection: 'users'
+        })
     }
 
     SetContext(context){
@@ -11,12 +17,16 @@ export default class UserProvider {
         this.pubSub = this.context.pubSub
     }
 
-    GetUsers(){
-        return this.users
+    async GetUserById(id){
+        return await this.dataprovider.FindById(id)
     }
 
-    RegisterUser(user){
-        user._id = new Date().getTime()
+    async GetUsers(){
+        return await this.dataprovider.Find()
+    }
+
+    async RegisterUser(user){
+        user = await this.dataprovider.Create(user)
         
         this.users.push(user)
 

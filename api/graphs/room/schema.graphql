@@ -1,0 +1,23 @@
+type Query {
+    Rooms: [Room]
+}
+
+type Mutation {
+    AddRoom(data: RoomInput): Room
+}
+
+type Subscription {
+    RoomAdded: Room
+}
+
+type Room {
+    _id: ID
+    name: String
+    owner: User
+    users: [User]
+}
+
+input RoomInput {
+    name: String
+    owner: ID
+}

@@ -31,7 +31,6 @@ export default class Router {
     }
 
     AddGraphModule(graph){
-        // console.log(graph)
         return CreateGraphModule(graph, this)
     }
 
